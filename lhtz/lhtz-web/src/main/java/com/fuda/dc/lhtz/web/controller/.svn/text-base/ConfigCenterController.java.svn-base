@@ -1,0 +1,212 @@
+package com.baidu.cid.lingxi.zkconfigcenter.web;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+
+import com.baidu.cid.lingxi.zkconfigcenter.model.ViewInfoVo;
+import com.baidu.cid.lingxi.zkconfigcenter.service.CongfigCenterService;
+import com.baidu.cid.lingxi.zkconfigcenter.service.UserService;
+import com.baidu.cid.lingxi.zkconfigcenter.utils.Constants;
+import com.baidu.cid.lingxi.zkconfigcenter.web.base.BaseController;
+import com.baidu.cid.lingxi.zkconfigcenter.web.util.RequestUtil;
+import com.baidu.cid.lingxi.zkconfigcenter.web.util.SessionUtil;
+
+/**
+ * Spring MVC 注解方式配置 提供菜单配置功能
+ * 
+ * @author xiayanming
+ */
+@Controller
+public class ConfigCenterController extends BaseController {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ConfigCenterController.class);
+
+    @Autowired
+    private CongfigCenterService congfigCenterService;
+
+    @Autowired
+    private UserService userService;
+
+    /**
+     * 权限验证失败
+     */
+    @RequestMapping(value = "/validfail", method = RequestMethod.GET)
+    public String validfail(Model model, HttpServletRequest request, HttpServletResponse response) {
+        model.addAttribute("noPermission", true);
+        return "/login";
+    }
+
+    /**
+     * 登陆
+     */
+    @RequestMapping(value = "/dologin", method = RequestMethod.POST)
+    public String dologin(Model model, HttpServletRequest request, HttpServletResponse response) {
+        String userName = RequestUtil.getString(request, "username", "");
+        String password = RequestUtil.getString(request, "password", "");
+
+        boolean validResult = userService.doLogin(userName, password);
+        if (validResult) {
+            SessionUtil.setUserName(request, userName);
+            return "redirect:/configcenter/index.htm";
+        } else {
+            return "redirect:/validfail.htm";
+        }
+    }
+
+    /**
+     * 打开登陆页面
+     */
+    @RequestMapping(value = "/login", method = RequestMethod.GET)
+    public String login(Model model, HttpServletRequest request, HttpServletResponse response) {
+        return "/login";
+    }
+
+    /**
+     * 获取当前path的相关data和path，以及当前path的children
+     */
+    @RequestMapping(value = "/configcenter/view", method = RequestMethod.GET)
+    public String viewInfo(Model model, HttpServletRequest request, HttpServletResponse response) {
+        String path = RequestUtil.getString(request, "path", "");
+
+        //验证用户权限
+        String result = validate(request, path);
+        if (result != null)
+            return result;
+
+        ViewInfoVo viewInfo = congfigCenterService.getViewInfo(path);
+        model.addAttribute("viewInfo", viewInfo);
+
+        // 顶部导航条
+        String[] nodeArrays = viewInfo.getPath().split("/");
+        Map<String, String> nodeMap = new LinkedHashMap<String, String>();
+        StringBuilder stringBuilder = new StringBuilder();
+        int length = nodeArrays.length;
+        for (int i = 0; i < length; i++) {
+            String node = nodeArrays[i];
+            if (StringUtils.isEmpty(node)) {
+                stringBuilder.append("/");
+            } else {
+                if (i > 1)
+                    stringBuilder.append("/");
+                stringBuilder.append(node);
+            }
+
+            nodeMap.put(node, stringBuilder.toString());
+        }
+        model.addAttribute("nodeMap", nodeMap);
+        return "/config_center/main";
+    }
+
+    @RequestMapping(value = "/configcenter/index", method = RequestMethod.GET)
+    public String index(Model model, HttpServletRequest request, HttpServletResponse response) {
+        return "/config_center/index";
+    }
+
+    @RequestMapping(value = "/configcenter/left", method = RequestMethod.GET)
+    public String initLeft(Model model, HttpServletRequest request, HttpServletResponse response) {
+        return "/config_center/left";
+    }
+
+    @RequestMapping(value = "/configcenter/main", method = RequestMethod.GET)
+    public String initMain(Model model, HttpServletRequest request, HttpServletResponse response) {
+        String userName = SessionUtil.getUserName(request);
+        if (StringUtils.isEmpty(userName)) {
+            LOG.error("[initMain] username:{} ", userName);
+            return "redirect:/validfail.htm";
+        }
+
+        String accessList = userService.getAccessList(userName);
+        ViewInfoVo viewInfo = congfigCenterService.getViewInfo(accessList);
+        model.addAttribute("viewInfo", viewInfo);
+        String[] pathArrays = viewInfo.getPath().split("/");
+        model.addAttribute("pathArrays", pathArrays);
+        return "/config_center/main";
+    }
+
+    @RequestMapping(value = "/configcenter/getForAdd", method = RequestMethod.GET)
+    public String getForAdd(Model model, HttpServletRequest request, HttpServletResponse response) {
+        String path = RequestUtil.getString(request, "path", "");
+        ViewInfoVo viewInfo = congfigCenterService.getViewInfo(path);
+        model.addAttribute("viewInfo", viewInfo);
+        return "/config_center/add";
+    }
+
+    @RequestMapping(value = "/configcenter/add", method = RequestMethod.POST)
+    public String add(Model model, HttpServletRequest request, HttpServletResponse response) {
+        String parentPath = RequestUtil.getString(request, "parentPath", "");
+        String name = RequestUtil.getString(request, "name", "");
+        String value = RequestUtil.getString(request, "value", "");
+
+        //验证用户权限
+        String result = validate(request, parentPath);
+        if (result != null)
+            return result;
+
+        //一次只能创建一个name名称，不能创建一个路径
+        if (name.indexOf("/") != -1) {
+            LOG.error("path:{} contains illegal characters /", name);
+            return result;
+        }
+
+        String fullPath = parentPath + (parentPath.endsWith(Constants.ROOTPATH) ? name : "/" + name);
+        LOG.info("add conf, fullPath={}", fullPath);
+        congfigCenterService.add(fullPath, value);
+        return "redirect:/configcenter/index.htm";
+    }
+
+    @RequestMapping(value = "/configcenter/getForUpdate", method = RequestMethod.GET)
+    public String getForUpdate(Model model, HttpServletRequest request, HttpServletResponse response) {
+        String path = RequestUtil.getString(request, "path", "");
+        ViewInfoVo viewInfo = congfigCenterService.getViewInfo(path);
+        model.addAttribute("viewInfo", viewInfo);
+        return "/config_center/update";
+    }
+
+    @RequestMapping(value = "/configcenter/update", method = RequestMethod.POST)
+    public String update(Model model, HttpServletRequest request, HttpServletResponse response) {
+        String path = RequestUtil.getString(request, "path", "");
+        String value = RequestUtil.getString(request, "value", "");
+        LOG.info("update conf, path={}, value={}", path, value);
+
+        //验证用户权限
+        String result = validate(request, path);
+        if (result != null)
+            return result;
+
+        congfigCenterService.update(path, value);
+        return "redirect:/configcenter/index.htm";
+    }
+
+    /**
+     * 验证request参数
+     * 
+     * @param request   HttpServletRequest
+     * @param zkpath    zkpath
+     * @return  返回验证失败时跳转页面
+     */
+    public String validate(HttpServletRequest request, String zkpath) {
+        String userName = SessionUtil.getUserName(request);
+        if (StringUtils.isEmpty(userName)) {
+            LOG.error("[initMain] username:{} ", userName);
+            return "redirect:/validfail.htm";
+        }
+
+        String accessList = userService.getAccessList(userName);
+        if (zkpath.indexOf(accessList) == -1) {
+            return "redirect:/validfail.htm";
+        }
+        return null;
+    }
+}

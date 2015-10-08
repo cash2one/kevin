@@ -1,0 +1,32 @@
+package com.baidu.cid.lingxi.zkconfigcenter.web;
+
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.baidu.cid.lingxi.zkconfigcenter.core.conf.ZkConfigClient;
+import com.baidu.cid.lingxi.zkconfigcenter.monitor.Monitor;
+
+/**
+ * 系统全局ContextListener
+ * 
+ * @author xiayanming
+ */
+public class SystemContextListener implements ServletContextListener {
+
+    private static final Logger logger = LoggerFactory.getLogger(SystemContextListener.class);
+
+    @Override
+    public void contextInitialized(ServletContextEvent sce) {
+        logger.info("contextInitialized ......");
+        Monitor monitor = new Monitor();
+        monitor.start();
+    }
+
+    @Override
+    public void contextDestroyed(ServletContextEvent sce) {
+        ZkConfigClient.getInstance().close();
+    }
+}

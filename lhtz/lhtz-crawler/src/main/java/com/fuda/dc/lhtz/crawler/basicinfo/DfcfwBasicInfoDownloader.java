@@ -1,0 +1,141 @@
+package com.fuda.dc.lhtz.crawler.basicinfo;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.fuda.dc.lhtz.client.http.HttpClient;
+import com.fuda.dc.lhtz.crawler.util.StringUtil;
+import com.fuda.dc.lhtz.crawler.vo.BasicInfo;
+import com.fuda.dc.lhtz.crawler.vo.LonghuInfo;
+
+
+public class DfcfwBasicInfoDownloader {
+	private static final Logger LOG = LoggerFactory.getLogger(DfcfwBasicInfoDownloader.class);
+	
+	private static final String URL_PREFIX = "http://quote.eastmoney.com/";
+	
+	private static Set<String> keySet = new HashSet<String>();
+	
+	static {
+		keySet.add("总股本");
+		keySet.add("收益");
+		keySet.add("净资产");
+		keySet.add("市净率");
+		keySet.add("净利润");
+		keySet.add("总值");
+		keySet.add("流通股");
+		keySet.add("流值");
+	}
+	
+	public DfcfwBasicInfoDownloader() {
+	}
+	
+	/**
+	 * 是否需要重新下载
+	 * 
+	 * @param stockCode
+	 * @return
+	 */
+	private boolean isNeedDownLoad(String stockCode) {
+		return true;
+	}
+	
+	public BasicInfo download(String stockCode) {
+		String urlSuffix = genUrlSuffix(stockCode);
+		if ("".equals(urlSuffix)) {
+			LOG.info("stock code is not start with 0 or 3 or 6, code: {}", stockCode);
+			return null;
+		}
+		
+		String url = StringUtil.implode(URL_PREFIX, genUrlSuffix(stockCode), stockCode, ".html"); 
+		String page = HttpClient.doGet(url);
+		writeToFile("D:/local/test.html", page);
+		BasicInfo basicInfo = parse(page);
+		return basicInfo;
+	}
+	
+	/**
+	 * 根据股票代码第一位生成请求url后缀
+	 * 
+	 * @param code
+	 * @return
+	 */
+	private String genUrlSuffix(String code) {
+		if (code == null || "".equals(code)) {
+			return "";
+		}
+		
+		char firstCode = code.charAt(0);
+		switch (firstCode) {
+		case '0':
+			return "sz";
+		case '3':
+			return "sz";
+		case '6':
+			return "ss";
+		default:
+			return "";
+		}
+	}
+	
+	/**
+	 * 解析网页中的股票基本信息
+	 * 
+	 * @param page
+	 * @return
+	 */
+	private BasicInfo parse(String page) {
+		BasicInfo basicInfo = new BasicInfo();
+		Document document = Jsoup.parse(page);
+		Elements tables = document.getElementsByClass("yfw");
+		if (tables.size() != 1) {
+			return null;
+		}
+		
+		Elements tds = tables.get(0).getElementsByTag("td");
+		String pe = tds.get(11).text().toString();
+		basicInfo.setPe(StringUtil.strToFloat(pe));
+		String totalMarketValue = tds.get(12).text().toString();
+		String pb = tds.get(11).text().toString();
+		basicInfo.setPb(StringUtil.strToFloat(pb));
+		String circulationMarketValue = tds.get(13).text().toString();
+		
+		Element table = document.getElementById("rtp2");
+		Elements tds2 = table.getElementsByTag("td");
+		String circulationShares= tds2.get(10).text().toString();
+		
+		return basicInfo;
+	}
+	
+	private void writeToFile(String fileName, String text) {
+		FileWriter fw = null;
+		try {
+			fw = new FileWriter(fileName);
+			fw.write(text);
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			if (fw != null) {
+				try {
+					fw.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+
+}
