@@ -1,0 +1,147 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<artifactId>lhtz</artifactId>
+		<groupId>com.fuda.dc.lhtz</groupId>
+		<version>0.0.1-SNAPSHOT</version>
+	</parent>
+
+	<groupId>com.fuda.dc.lhtz.crawler</groupId>
+	<artifactId>lhtz-crawler</artifactId>
+	<packaging>jar</packaging>
+	<name>lhtz-crawler</name>
+
+	<properties>
+		<compile.source>1.6</compile.source>
+		<compile.target>1.6</compile.target>
+		<java.version>1.6</java.version>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.jsoup</groupId>
+			<artifactId>jsoup</artifactId>
+			<version>1.8.3</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+			<version>5.1.17</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>com.whalin</groupId>
+			<artifactId>Memcached-Java-Client</artifactId>
+			<version>3.0.2</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>net.spy</groupId>
+			<artifactId>spymemcached</artifactId>
+			<version>2.12.0</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>redis.clients</groupId>
+			<artifactId>jedis</artifactId>
+			<version>2.7.3</version>
+		</dependency>
+		
+	</dependencies>
+
+	<build>
+		<resources>
+			<resource>
+				<directory>src/main/resources/</directory>
+			</resource>
+		</resources>
+		<plugins>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.3.2</version>
+				<configuration>
+					<source>${compile.source}</source>
+					<target>${compile.target}</target>
+					<encoding>${project.build.sourceEncoding}</encoding>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>2.4</version>
+				<configuration>
+					<appendAssemblyId>false</appendAssemblyId>
+					<archive>
+						<manifest>
+							<mainClass>com.baidu.cid.lingxi.undermp.mpjobs.MultiUrlDictProcessJobTestForWeiMing</mainClass>
+						</manifest>
+					</archive>
+					<descriptorRefs>
+						<descriptorRef>
+							jar-with-dependencies
+						</descriptorRef>
+					</descriptorRefs>
+				</configuration>
+				<executions>
+					<execution>
+						<id>make-assembly</id>
+						<phase>package</phase>
+						<goals>
+							<goal>assembly</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			
+				        <!-- 单元测试覆盖率插�?-->  
+        <plugin>  
+            <groupId>org.codehaus.mojo</groupId>  
+            <artifactId>cobertura-maven-plugin</artifactId>  
+            <version>2.5.2</version>  
+            <configuration>  
+                <encoding>UTF-8</encoding>  
+                <formats>  
+                    <format>html</format>  
+                    <format>xml</format>  
+                </formats>  
+            </configuration>  
+        </plugin>  
+
+        <plugin>  
+			 <artifactId>maven-antrun-plugin</artifactId>  
+			 <executions>  
+			  <execution>  
+			   <phase>site</phase>  
+			   <configuration>  
+			    <tasks>  
+			     <copy todir="target/classes">  
+			      <fileset dir="src/main/java">  
+			       <include name="**/*.java" />  
+			      </fileset>  
+			     </copy>  
+			     <jar destfile="target/cover-test-result.zip">  
+			      <fileset dir="target/site">  
+			       <include name="**/*.html" />  
+			       <include name="**/*.css" />  
+			       <include name="**/*.txt" />  
+			       <include name="**/*.png" />  
+			       <include name="**/*.js" />  
+			      </fileset>  
+			     </jar>  
+			    </tasks>  
+			   </configuration>  
+			   <goals>  
+			    <goal>run</goal>  
+			   </goals>  
+			  </execution>  
+			 </executions>  
+			</plugin>  
+		</plugins>
+	</build>
+</project>

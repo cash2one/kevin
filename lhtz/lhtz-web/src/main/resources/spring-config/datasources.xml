@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/beans 
+		http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context-4.0.xsd
+        http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
+        http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.0.xsd"
+	default-autowire="byName">
+
+	<!-- 引入jdbc配置文件 -->  
+    <context:property-placeholder location="classpath:db.properties" />  
+  
+    <!--创建jdbc数据源 -->  
+    <bean id="dataSource" class="org.apache.tomcat.jdbc.pool.DataSource"  
+        destroy-method="close">  
+        <property name="driverClassName" value="com.mysql.jdbc.Driver" />  
+        <property name="url" value="jdbc:mysql://127.0.0.1:3306/stock?useUnicode=true" />  
+        <property name="username" value="work" />  
+        <property name="password" value="passw0rd" />
+<!--         <property name="defaultAutoCommit" value="true" />
+        READ_COMMITTED
+        <property name="defaultTransactionIsolation" value="2" />
+        sizing the connection pool
+        <property name="initialSize" value="5" />
+        <property name="minIdle" value="5" />
+        <property name="maxIdle" value="15" />
+        <property name="maxActive" value="200" />
+        in milliseconds
+        <property name="maxWait" value="10000" />
+        <property name="testOnBorrow" value="true" />
+        <property name="validationQuery" value="/* ping */ select 1" />
+        <property name="validationInterval" value="30000" />
+        <property name="testWhileIdle" value="true" />
+        in milliseconds, the sweeper runs every 60 seconds
+        <property name="timeBetweenEvictionRunsMillis" value="60000" />
+        in milliseconds, the connection will be closed if the idle time is
+            larger than 5 minutes
+        <property name="minEvictableIdleTimeMillis" value="300000" />  --> 
+    </bean>  
+  
+    <!-- (事务管理)transaction manager, use JtaTransactionManager for global tx -->  
+    <bean id="transactionManager"  
+        class="org.springframework.jdbc.datasource.DataSourceTransactionManager">  
+        <property name="dataSource" ref="dataSource" />  
+    </bean>  
+  
+    <!-- 创建SqlSessionFactory，同时指定数据源 -->  
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">  
+    	<property name="mapperLocations">
+			<list>
+				<value>classpath:sql-mapper/*Mapper.xml</value>
+			</list>
+		</property>
+        <property name="dataSource" ref="dataSource" />  
+    </bean>  
+      
+    <!-- 可通过注解控制事务 -->  
+<!--     <tx:annotation-driven /> -->
+  
+    <!-- Mapper接口所在包名，Spring会自动查找其下的Mapper -->  
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">  
+        <property name="basePackage" value="com.fuda.dc.lhtz.web.dao" />  
+    </bean>
+
+	
+</beans>

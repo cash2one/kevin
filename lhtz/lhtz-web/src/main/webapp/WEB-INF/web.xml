@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="http://java.sun.com/xml/ns/j2ee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
+	version="2.5">
+	
+	<!--1.icon: 指定web站台中小图标和大图标的路径,格式为gif或jpg,小图标16X16 pixel，大图标32X32 pixel-->
+	<icon>
+		<small-icon>/img/small.gif</small-icon>
+		<large-icon>/img/large.gif</large-icon>
+	</icon>
+
+	<!--2.dispalay-name: 定义应用的名称 -->
+	<display-name>web</display-name>
+	
+	<!--3:description: 应用描述 -->
+	<description>lhtz web</description>
+	
+	<!--4.context-param: 用来设定web应用的环境参数(context) -->
+	<context-param>
+		<param-name>log4jRefreshInterval</param-name>
+		<param-value>5000</param-value>
+	</context-param>
+	<context-param>
+		<param-name>log4jConfigLocation</param-name>
+		<param-value>classpath:log4j.properties</param-value>
+	</context-param>
+	<context-param>
+		<param-name>contextConfigLocation</param-name>
+		<param-value>classpath:spring-config/applicationContext.xml</param-value>
+	</context-param>
+	
+	<!--5.filter: 用来设定web应用的过滤器-->
+	<filter>
+		<filter-name>CharacterEncodingFilter</filter-name>
+			<filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>
+		<init-param>
+			<param-name>encoding</param-name>
+			<param-value>UTF-8</param-value>
+		</init-param>
+		<init-param>
+			<param-name>forceEncoding</param-name>
+			<param-value>true</param-value>
+		</init-param>
+	</filter>
+	
+	<!--6.filter-mapping: 用来定义Filter所对应的URL -->
+	<filter-mapping>
+		<filter-name>CharacterEncodingFilter</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping>
+    
+<!--     <filter>
+		<filter-name>securityFilter</filter-name>
+		<filter-class>com.fuda.dc.lhtz.web.web.filter.SecurityFilter</filter-class>
+	</filter>
+
+	<filter-mapping>
+		<filter-name>securityFilter</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping> -->
+	
+	<!--7.listener: 用来定义Listener接口 -->
+	<listener>
+		<listener-class>org.springframework.web.util.Log4jConfigListener</listener-class>
+	</listener>
+
+	<listener>
+        <listener-class>com.fuda.dc.lhtz.web.listener.SystemContextListener</listener-class>
+    </listener>
+
+	<listener>
+		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+	</listener>
+	
+	<!--8.Spring view分发器 -->  
+    <servlet>  
+        <servlet-name>dispatcher</servlet-name>  
+        <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>  
+        <init-param>  
+            <param-name>contextConfigLocation</param-name>  
+            <param-value>classpath:spring-config/dispatcher-servlet.xml</param-value>  
+        </init-param>  
+        <load-on-startup>1</load-on-startup>  
+    </servlet>  
+    
+    <!--9.servlet-mapping:用来定义servlet所对应URL-->
+    <servlet-mapping>
+		<servlet-name>dispatcher</servlet-name>
+		<url-pattern>/</url-pattern>
+	</servlet-mapping>
+	
+	<!--10.session-config:定义这个web站台所有session的有效期限.，单位：分钟 -->
+	<session-config>
+		<session-timeout>30</session-timeout>
+	</session-config>
+    
+<!-- 	<servlet>
+		<servlet-name>ConfigTreeServlet</servlet-name>
+		<servlet-class>com.baidu.cid.lingxi.zkconfigcenter.web.servlet.ConfigTreeServlet</servlet-class>
+	</servlet>
+
+	<servlet-mapping>
+		<servlet-name>ConfigTreeServlet</servlet-name>
+		<url-pattern>/configTreeServlet</url-pattern>
+	</servlet-mapping> -->
+	
+	<!--11.mime-mapping: 定义某一个扩展名和某一MIME Type做对映 -->
+	<mime-mapping>
+		<extension>doc</extension>
+		<mime-type>application/vnd.ms-word</mime-type>
+	</mime-mapping>
+	<mime-mapping>
+		<extension>xls</extension>
+		<mime-type>application/vnd.ms-excel</mime-type>
+	</mime-mapping>
+	<mime-mapping>
+		<extension>ppt</extension>
+		<mime-type>application/vnd.ms-powerpoint</mime-type>
+	</mime-mapping>
+
+	<!--12.welcome-file-list: 包含一个子元素welcome-file.用来定义首页列单-->
+	<welcome-file-list>
+		<welcome-file>index.html</welcome-file>
+		<welcome-file>index.jsp</welcome-file>
+	</welcome-file-list>
+	
+	<!--13.error-page: 包含三个子元素error-code,exception-type和location.将错误代码(Error Code)或异常(Exception)的种类对应到web应用资源路径 -->
+	<error-page>
+		<error-code>404</error-code>
+		<location>/notfound.jsp</location>
+	</error-page>
+	<error-page>
+		<exception-type>java.lang.Exception</exception-type>
+		<location>/exception.jsp</location>
+	</error-page>
+	
+	<!--14.jsp-config: 主要用来设定JSP的相关配置 -->
+<!-- 	<jsp-config>
+		<taglib>
+			<taglib-uri>/mytaglib</taglib-uri>
+			<taglib-location>/WEB-INF/mytaglib.tld</taglib-location>
+		</taglib>
+	</jsp-config> -->
+	
+</web-app>

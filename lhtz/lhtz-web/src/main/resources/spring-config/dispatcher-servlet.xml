@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:mvc="http://www.springframework.org/schema/mvc" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:context="http://www.springframework.org/schema/context" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:sca="http://www.springframework.org/schema/sca"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+            http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd
+            http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
+            http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.0.xsd
+            http://www.springframework.org/schema/sca http://www.springframework.org/schema/sca/spring-sca-4.0.xsd
+            http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd">
+	
+	<!-- 启用spring mvc 注解 -->
+    <context:annotation-config />
+    <mvc:annotation-driven />
+    
+    <!-- 静态资源访问（不拦截此目录下的东西的访问） -->  
+    <mvc:resources location="/img/" mapping="/img/**" />  
+    <!-- 当上面要访问的静态资源不包括在上面的配置中时，则根据此配置来访问 -->
+    <mvc:default-servlet-handler/>
+    
+	<!-- 设置使用注解的类所在的jar包 -->
+	<context:component-scan base-package="com.fuda.dc.lhtz.web" />
+
+	<bean id="exceptionResolver"
+		class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
+		<!-- property name="defaultErrorView" value="/util/login"></property-->
+		<property name="exceptionMappings">
+			<props>
+				<prop key="org.springframework.dao.DataAccessException">
+					dataAccessFailure
+                </prop>
+			</props>
+		</property>
+	</bean>
+
+	<!-- 完成请求和注解POJO的映射 -->
+	<bean id="methodMapping" class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter" />
+
+	<!-- -->
+	<bean id="filenameController" class="org.springframework.web.servlet.mvc.UrlFilenameViewController" />
+	
+	<!-- View Resolver for JSPs 如果viewName在viewNames列表中，则使用JSP View， 否则转给ViewResolver链中的下一个viewResolver处理（也就是tiles） -->
+	<bean id="jstlViewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="viewClass" value="org.springframework.web.servlet.view.JstlView" />
+		<property name="prefix" value="/WEB-INF/pages/" />
+		<property name="suffix" value=".jsp" />
+	</bean>
+	
+	 <!-- 支持上传文件 -->  
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+    	<property name="defaultEncoding" value="UTF-8" />
+    	<property name="maxUploadSize" value="10240000" />
+    </bean>  
+	
+	<!-- json转换器 -->
+<!-- 	<bean id="jsonConverter" class="org.springframework.http.converter.json.MappingJacksonHttpMessageConverter"> 
+		<property name="supportedMediaTypes" value="application/json" />
+	</bean> -->
+    
+    <!-- 配置RestTemplate -->
+	<!--Http client Factory -->
+	<bean id="httpClientFactory"
+		class="org.springframework.http.client.SimpleClientHttpRequestFactory">
+		<property name="connectTimeout" value="5000" />
+		<property name="readTimeout" value="5000" />
+	</bean>
+
+	<!--RestTemplate -->
+	<bean id="restTemplate" class="org.springframework.web.client.RestTemplate">
+		<constructor-arg ref="httpClientFactory" />
+	</bean>
+    
+    <!--配置访问权限拦截器 -->
+<!--     <mvc:interceptors>
+    	<mvc:interceptor>
+    		<mvc:mapping path="/user/*"/>
+    		<mvc:mapping path="/mail/*"/>
+    		<bean class="com.baidu.rigel.cpcr.web.interceptor.SystemInterceptor"></bean>
+    	</mvc:interceptor>
+    </mvc:interceptors> -->
+
+</beans>
