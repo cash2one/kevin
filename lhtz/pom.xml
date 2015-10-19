@@ -63,6 +63,7 @@
 		<module>lhtz-common</module>
 		<module>lhtz-crawler</module>
 		<module>lhtz-web</module>
+		<module>lhtz-ml</module>
 	</modules>
 
 	<build>
