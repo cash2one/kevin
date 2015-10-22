@@ -317,7 +317,7 @@ public class Kmeans {
 	}
 			    
 	public static void main(String[] args) {
-		Kmeans1 kmeans = new Kmeans1();
+		Kmeans kmeans = new Kmeans();
 		kmeans.loadData("E:\\sampledata.txt");
 		kmeans.train(2, 10000000, 0.0000001);
 		kmeans.outputModel("E:\\model.txt");
