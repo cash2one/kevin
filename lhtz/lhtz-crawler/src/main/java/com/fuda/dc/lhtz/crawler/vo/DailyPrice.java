@@ -1,7 +1,11 @@
 package com.fuda.dc.lhtz.crawler.vo;
 
-import java.sql.Date;
-
+/**
+ * 股票每日成交数据（k线）
+ * 
+ * @author aa
+ *
+ */
 public class DailyPrice {
 	private long id;
 	private String stockCode;
@@ -12,6 +16,23 @@ public class DailyPrice {
 	private long volume;
 	private float adjustClosePrice;
 	private String date;
+	
+	public DailyPrice() {
+	}
+	
+	public DailyPrice(long id, String stockCode, float openPrice, float highPrice, float lowPrice,
+			float closePrice, long volume, float adjustClosePrice, String date ) {
+		this.id = id;
+		this.stockCode = stockCode;
+		this.openPrice = openPrice;
+		this.highPrice = highPrice;
+		this.lowPrice = lowPrice;
+		this.closePrice = closePrice;
+		this.volume = volume;
+		this.adjustClosePrice = adjustClosePrice;
+		this.date = date;
+	}
+	
 	public long getId() {
 		return id;
 	}
