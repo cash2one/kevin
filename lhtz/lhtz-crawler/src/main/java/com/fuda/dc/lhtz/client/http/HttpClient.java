@@ -5,6 +5,9 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,5 +52,31 @@ public class HttpClient {
 		}
 
 		return pageHTML.toString();
+	}
+	
+	public static String doGet(String url, Map<String, String> pararms) {
+		return doGet(url, pararms, ENCODING);
+	}
+	
+	public static String doGet(String url, Map<String, String> pararms, String encoding) {
+		StringBuilder sb = new StringBuilder();
+		
+		sb.append(url);
+		sb.append("?");
+		int count = 0;
+		Iterator<Entry<String, String>> iter = pararms.entrySet().iterator();
+		while (iter.hasNext()) {
+			Entry<String, String> entry = iter.next();
+			if (count >= 1) {
+				sb.append("&");
+			}
+			sb.append(entry.getKey());
+			sb.append("=");
+			sb.append(entry.getValue());
+			
+			count++;
+		}
+		
+		return doGet(sb.toString(), encoding);
 	}
 }
