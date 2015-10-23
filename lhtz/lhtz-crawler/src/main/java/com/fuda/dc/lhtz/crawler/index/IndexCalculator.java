@@ -3,7 +3,7 @@ package com.fuda.dc.lhtz.crawler.index;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.fuda.dc.lhtz.crawler.vo.AdanceIndex;
+import com.fuda.dc.lhtz.crawler.vo.AdvanceIndex;
 import com.fuda.dc.lhtz.crawler.vo.DailyPrice;
 
 public class IndexCalculator {
@@ -14,14 +14,15 @@ public class IndexCalculator {
 	 * @param yesAdanceIndex
 	 * @return
 	 */
-	public static AdanceIndex calculate(DailyPrice dailyPrice, AdanceIndex yesAdanceIndex) {
-		AdanceIndex adanceIndex = new AdanceIndex();
+	public static AdvanceIndex calculate(DailyPrice dailyPrice, AdvanceIndex yesAdanceIndex) {
+		AdvanceIndex adanceIndex = new AdvanceIndex();
 		double[] macdParams = calcMacd(dailyPrice, yesAdanceIndex);
-		adanceIndex.setEma12(macdParams[0]);
-		adanceIndex.setEma26(macdParams[1]);
-		adanceIndex.setDiff(macdParams[2]);
-		adanceIndex.setDea(macdParams[3]);
+		adanceIndex.setMacdEma12(macdParams[0]);
+		adanceIndex.setMacdEma26(macdParams[1]);
+		adanceIndex.setMacdDiff(macdParams[2]);
+		adanceIndex.setMacdDea(macdParams[3]);
 		adanceIndex.setMacd(macdParams[4]);
+		
 		
 		return adanceIndex;
 	}
@@ -32,8 +33,8 @@ public class IndexCalculator {
 	 * @param dailyPrices
 	 * @return
 	 */
-	public static List<AdanceIndex> calculate(List<DailyPrice> dailyPrices) {
-		List<AdanceIndex> adanceIndexs = new ArrayList<AdanceIndex>();
+	public static List<AdvanceIndex> calculate(List<DailyPrice> dailyPrices) {
+		List<AdvanceIndex> advanceIndices = new ArrayList<AdvanceIndex>();
 		// 计算macd各项指标
 		List<double[]> macdList = calcMacd(dailyPrices);
 		// 计算5天均线
@@ -46,24 +47,46 @@ public class IndexCalculator {
 		List<Double> mean30List = calcMean(dailyPrices, 30);
 		// 计算60天均线
 		List<Double> mean60List = calcMean(dailyPrices, 60);
+		List<double[]> kdjList = calcKdj(dailyPrices, 9);
+		
+		List<Double> obvList = calcObv(dailyPrices);
+		
+		List<Double> rsiList = calcRsi(dailyPrices);
+		
+		List<double[]> bollList = calcBoll(dailyPrices);
 		
 		for (int i = 0; i < dailyPrices.size(); i++) {
-			AdanceIndex adanceIndex = new AdanceIndex();
+			AdvanceIndex advanceIndex = new AdvanceIndex();
 			double[] macdParams = macdList.get(i);
-			adanceIndex.setEma12(macdParams[0]);
-			adanceIndex.setEma26(macdParams[1]);
-			adanceIndex.setDiff(macdParams[2]);
-			adanceIndex.setDea(macdParams[3]);
-			adanceIndex.setMacd(macdParams[4]);
-			adanceIndex.setMean5(mean5List.get(i));
-			adanceIndex.setMean10(mean10List.get(i));
-			adanceIndex.setMean20(mean20List.get(i));
-			adanceIndex.setMean30(mean30List.get(i));
-			adanceIndex.setMean60(mean60List.get(i));
-			adanceIndexs.add(adanceIndex);
+			advanceIndex.setMacdEma12(macdParams[0]);
+			advanceIndex.setMacdEma26(macdParams[1]);
+			advanceIndex.setMacdDiff(macdParams[2]);
+			advanceIndex.setMacdDea(macdParams[3]);
+			advanceIndex.setMacd(macdParams[4]);
+			
+			advanceIndex.setMean5(mean5List.get(i));
+			advanceIndex.setMean10(mean10List.get(i));
+			advanceIndex.setMean20(mean20List.get(i));
+			advanceIndex.setMean30(mean30List.get(i));
+			advanceIndex.setMean60(mean60List.get(i));
+			
+			double[] kdjParams = kdjList.get(i);
+			advanceIndex.setKdjK(kdjParams[0]);
+			advanceIndex.setKdjD(kdjParams[1]);
+			advanceIndex.setKdjJ(kdjParams[2]);
+			
+			advanceIndex.setObv(obvList.get(i));
+			advanceIndex.setRsi(rsiList.get(i));
+			
+			double[] bollParams = bollList.get(i);
+			advanceIndex.setBollMd(bollParams[0]);
+			advanceIndex.setBollUp(bollParams[1]);
+			advanceIndex.setBollDn(bollParams[2]);
+			
+			advanceIndices.add(advanceIndex);
 		}
 		
-		return adanceIndexs;
+		return advanceIndices;
 	}
 	
 	/**
@@ -98,12 +121,12 @@ public class IndexCalculator {
 	 * @param yesAdanceIndex
 	 * @return
 	 */
-	public static double[] calcMacd(DailyPrice dailyPrice, AdanceIndex yesAdanceIndex) {
+	public static double[] calcMacd(DailyPrice dailyPrice, AdvanceIndex yesAdanceIndex) {
 		double[] params = new double[5];
-		double ema12 = Macd.ema12(yesAdanceIndex.getEma12(), dailyPrice.getClosePrice());
-		double ema26 = Macd.ema26(yesAdanceIndex.getEma26(), dailyPrice.getAdjustClosePrice());
+		double ema12 = Macd.ema12(yesAdanceIndex.getMacdEma12(), dailyPrice.getClosePrice());
+		double ema26 = Macd.ema26(yesAdanceIndex.getMacdEma26(), dailyPrice.getAdjustClosePrice());
 		double diff = Macd.diff(ema12, ema26);
-		double dea = Macd.dea(yesAdanceIndex.getDea(), diff);
+		double dea = Macd.dea(yesAdanceIndex.getMacdDea(), diff);
 		double macd = Macd.macd(diff, dea);
 		params[0] = ema12;
 		params[1] = ema26;
@@ -268,11 +291,11 @@ public class IndexCalculator {
 		return kdjList;
 	}
 	
-	public static double[] calcKdj(List<DailyPrice> dailyPrices, int n, AdanceIndex adanceIndex) {
+	public static double[] calcKdj(List<DailyPrice> dailyPrices, int n, AdvanceIndex adanceIndex) {
 		double[] params = new double[3];
 		double rsv = Kdj.rsv(dailyPrices, n);
-		double k = Kdj.k(adanceIndex.getK(), rsv);
-		double d = Kdj.d(adanceIndex.getD(), k);
+		double k = Kdj.k(adanceIndex.getKdjK(), rsv);
+		double d = Kdj.d(adanceIndex.getKdjD(), k);
 		double j = Kdj.j(k, d);
 		params[0] = k;
 		params[1] = d;
@@ -324,5 +347,4 @@ public class IndexCalculator {
 		params[2] = dn;
 		return params;
 	}
-	
 }
